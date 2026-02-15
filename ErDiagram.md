@@ -1,5 +1,5 @@
 ```mermaid
-ErDiagram
+erDiagram
 
 USERS {
     UUID id PK
