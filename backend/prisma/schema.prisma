@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       String   @id @default(uuid())
+  name     String
+  email    String   @unique
+  password String
+  role     Role
+
+  exams    Exam[]    @relation("TeacherExams")
+  attempts Attempt[] @relation("StudentAttempts")
+
+  createdAt DateTime @default(now())
+}
+
+model Exam {
+  id         String     @id @default(uuid())
+  title      String
+  duration   Int        // in minutes
+  status     ExamStatus @default(DRAFT)
+  teacherId  String
+
+  teacher    User       @relation("TeacherExams", fields: [teacherId], references: [id])
+  questions  Question[]
+  attempts   Attempt[]
+
+  createdAt  DateTime   @default(now())
+}
+
+model Question {
+  id            String       @id @default(uuid())
+  examId        String
+  type          QuestionType
+  text          String
+  marks         Int
+  options       String[]     // For MCQ options (JSON array)
+  correctAnswer String?      // For MCQ correct answer
+  starterCode   String?      // For coding questions
+
+  exam          Exam         @relation(fields: [examId], references: [id])
+  submissions   Submission[]
+  testCases     CodingTestCase[]
+}
+
+model CodingTestCase {
+  id             String   @id @default(uuid())
+  questionId     String
+  input          String
+  expectedOutput String
+
+  question       Question @relation(fields: [questionId], references: [id])
+}
+
+model Attempt {
+  id          String        @id @default(uuid())
+  studentId   String
+  examId      String
+  startTime   DateTime      @default(now())
+  endTime     DateTime?
+  status      AttemptStatus @default(NOT_STARTED)
+  totalScore  Int           @default(0)
+
+  student     User          @relation("StudentAttempts", fields: [studentId], references: [id])
+  exam        Exam          @relation(fields: [examId], references: [id])
+  submissions Submission[]
+  proctorLogs ProctorLog[]
+}
+
+model Submission {
+  id         String   @id @default(uuid())
+  attemptId  String
+  questionId String
+  answer     String
+  score      Int      @default(0)
+
+  attempt    Attempt  @relation(fields: [attemptId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id])
+
+  @@unique([attemptId, questionId])
+}
+
+model ProctorLog {
+  id        String   @id @default(uuid())
+  attemptId String
+  eventType String
+  timestamp DateTime @default(now())
+
+  attempt   Attempt  @relation(fields: [attemptId], references: [id])
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum QuestionType {
+  MCQ
+  SUBJECTIVE
+  CODING
+}
+
+enum AttemptStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  AUTO_SUBMITTED
+  EVALUATED
+}
