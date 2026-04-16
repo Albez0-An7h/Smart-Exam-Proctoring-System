@@ -17,7 +17,6 @@ export class ExamService {
     if (exam.teacherId !== teacherId) throw new Error('Not authorized to modify this exam');
     if (exam.status !== 'DRAFT') throw new Error('Cannot modify a published exam');
 
-    // Use QuestionFactory to validate type
     QuestionFactory.createQuestion({ id: 'temp', ...questionData, examId });
 
     return questionRepo.create({ ...questionData, examId });

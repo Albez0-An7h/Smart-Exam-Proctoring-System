@@ -2,12 +2,10 @@ import { ProctorLogRepository } from '../repositories/ProctorLogRepository';
 
 const proctorRepo = new ProctorLogRepository();
 
-// Observer interface for proctoring events
 export interface ProctoringObserver {
   onEvent(attemptId: string, eventType: string, count: number): void;
 }
 
-// Concrete observer: logs a warning if violations exceed threshold
 class ViolationThresholdObserver implements ProctoringObserver {
   private threshold: number;
   constructor(threshold = 3) {
@@ -24,7 +22,6 @@ export class ProctorService {
   private observers: ProctoringObserver[] = [];
 
   constructor() {
-    // Register default observers
     this.observers.push(new ViolationThresholdObserver(3));
   }
 
@@ -36,7 +33,6 @@ export class ProctorService {
     const log = await proctorRepo.create(attemptId, eventType);
     const count = await proctorRepo.countByAttempt(attemptId);
 
-    // Notify all observers (Observer Pattern)
     this.observers.forEach(obs => obs.onEvent(attemptId, eventType, count));
 
     return { log, totalEvents: count };

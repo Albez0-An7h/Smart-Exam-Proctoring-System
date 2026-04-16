@@ -32,7 +32,7 @@ export class MCQQuestion extends Question {
   }
 
   evaluate(answer: string): number {
-    return 0; // Skeleton
+    return 0;
   }
 }
 
@@ -48,7 +48,7 @@ export class CodingQuestion extends Question {
   }
 
   evaluate(answer: string): number {
-    return 0; // Skeleton
+    return 0;
   }
 }
 
@@ -58,6 +58,6 @@ export class SubjectiveQuestion extends Question {
   }
 
   evaluate(answer: string): number {
-    return 0; // Subjective evaluation requires manual grading hook
+    return 0;
   }
 }

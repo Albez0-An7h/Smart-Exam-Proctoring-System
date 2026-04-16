@@ -15,10 +15,9 @@ export class AttemptService {
     if (!exam) throw new Error('Exam not found');
     if (exam.status !== 'PUBLISHED') throw new Error('Exam is not published');
 
-    // Prevent duplicate in-progress attempts
     const existing = await attemptRepo.findByStudentAndExam(studentId, examId);
     const inProgress = existing.find((a: any) => a.status === 'IN_PROGRESS');
-    if (inProgress) return inProgress; // Resume existing attempt
+    if (inProgress) return inProgress;
 
     const attempt = await attemptRepo.create({ studentId, examId });
     return attempt;
@@ -39,15 +38,12 @@ export class AttemptService {
     if (attempt.studentId !== studentId) throw new Error('Forbidden');
     if (attempt.status !== 'IN_PROGRESS') throw new Error('Attempt is not in progress');
 
-    // State transition: IN_PROGRESS → SUBMITTED
     const context = new AttemptContext();
     context.setState(new InProgressState());
-    context.proceedToNextState(); // → SUBMITTED
+    context.proceedToNextState();
 
-    // Evaluate all answers
     const totalScore = await evaluationService.evaluateAttempt(attemptId);
 
-    // State transition: SUBMITTED → EVALUATED
     context.proceedToNextState();
 
     await attemptRepo.updateStatus(attemptId, 'EVALUATED', { endTime: new Date(), totalScore });

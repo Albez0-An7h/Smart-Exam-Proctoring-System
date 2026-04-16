@@ -12,7 +12,6 @@ export abstract class User {
     public role: Role
   ) {}
 
-  // Abstract methods can force subclasses to implement specific behavior
   abstract performRoleSpecificAction(): void;
 }
 
@@ -22,7 +21,6 @@ export class Student extends User {
   }
 
   performRoleSpecificAction(): void {
-    // Specific logic for student
   }
 }
 
@@ -32,7 +30,6 @@ export class Teacher extends User {
   }
 
   performRoleSpecificAction(): void {
-    // Specific logic for teacher
   }
 }
 
@@ -42,6 +39,5 @@ export class Admin extends User {
   }
 
   performRoleSpecificAction(): void {
-    // Specific logic for admin
   }
 }

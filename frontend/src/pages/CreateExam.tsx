@@ -41,13 +41,11 @@ export default function CreateExam() {
   const [searchParams] = useSearchParams();
   const addToExamId = searchParams.get('addTo');
 
-  // Exam details (only shown if not adding to existing)
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState(60);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
 
-  // Questions
   const [questions, setQuestions] = useState<Question[]>([emptyQuestion()]);
 
   const [loading, setLoading] = useState(false);
@@ -84,13 +82,11 @@ export default function CreateExam() {
     try {
       let examId = addToExamId;
 
-      // Create exam if not adding to existing
       if (!examId) {
         const examRes = await api.post('/exams', { title, duration: Number(duration), startTime: startTime || undefined, endTime: endTime || undefined });
         examId = examRes.data.id;
       }
 
-      // Add each question
       for (const q of questions) {
         const payload: Record<string, unknown> = {
           type: q.type,
@@ -221,7 +217,7 @@ export default function CreateExam() {
                     <textarea
                       id={`q${qi}-starter`}
                       className="form-control"
-                      placeholder="// starter code here"
+                      placeholder="
                       style={{ fontFamily: 'monospace', minHeight: 100 }}
                       value={q.starterCode}
                       onChange={(e) => updateQ(qi, { starterCode: e.target.value })}

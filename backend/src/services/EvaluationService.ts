@@ -15,7 +15,7 @@ export class EvaluationService {
       if (qData.type === 'MCQ') {
         const engine = new EvaluationEngine(new MCQEvaluationStrategy());
         const raw = engine.executeEvaluation(sub.answer, qData.correctAnswer ?? '');
-        score = raw * qData.marks; // raw is 0 or 1
+        score = raw * qData.marks;
       } else if (qData.type === 'CODING') {
         const engine = new EvaluationEngine(new CodingEvaluationStrategy());
         const totalCases = qData.testCases.length;
@@ -24,7 +24,6 @@ export class EvaluationService {
           score = Math.round(passRatio * qData.marks);
         }
       } else {
-        // SUBJECTIVE: manual grading, score stays 0 until teacher grades
         score = 0;
       }
 

@@ -32,7 +32,7 @@ export class SubmittedState extends AttemptState {
 
 export class EvaluatedState extends AttemptState {
   nextState(): AttemptState {
-    return this; // Final state
+    return this;
   }
   getStatus(): string {
     return 'EVALUATED';

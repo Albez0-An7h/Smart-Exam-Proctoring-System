@@ -15,15 +15,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Mount all routes under /api
 app.use('/api', routes);
 
-// Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Global error handler
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
   const status = err.status || 500;
