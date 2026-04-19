@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
+import { extractError } from '../api/errorUtils';
 import {
   RiArrowLeftLine,
   RiAddLine,
@@ -106,7 +107,7 @@ export default function CreateExam() {
       setSuccess(addToExamId ? 'Questions added successfully!' : 'Exam created with questions!');
       setTimeout(() => navigate('/teacher'), 1000);
     } catch (err: any) {
-      setError(String(err.response?.data?.error || 'Something went wrong.'));
+      setError(extractError(err, 'Something went wrong.'));
     } finally {
       setLoading(false);
     }

@@ -12,11 +12,14 @@ export const prisma = new PrismaClient({ adapter });
 
 const app = express();
 
-const allowedOrigins = process.env.ALLOWED_ORIGIN
-  ? process.env.ALLOWED_ORIGIN.split(',')
-  : ['http://localhost:5173'];
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGIN
+    ? process.env.ALLOWED_ORIGIN.split(',')
+    : true,
+  credentials: true,
+}));
 app.use(express.json());
 
 app.use('/api', routes);
@@ -27,7 +30,8 @@ app.get('/health', (_req, res) => {
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+  const message = typeof err.message === 'string' ? err.message : JSON.stringify(err.message);
+  res.status(err.status || 500).json({ error: message || 'Internal server error' });
 });
 
 export default app;

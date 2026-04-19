@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import { extractError } from '../api/errorUtils';
 
 type Role = 'STUDENT' | 'TEACHER';
 
@@ -25,7 +26,7 @@ export default function Register() {
       login(res.data.token);
       navigate(role === 'TEACHER' ? '/teacher' : '/dashboard');
     } catch (err: any) {
-      setError(String(err.response?.data?.error || 'Registration failed.'));
+      setError(extractError(err, 'Registration failed.'));
     } finally {
       setLoading(false);
     }

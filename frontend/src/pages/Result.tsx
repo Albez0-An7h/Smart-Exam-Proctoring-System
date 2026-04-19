@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { extractError } from '../api/errorUtils';
 import Spinner from '../components/Spinner';
 import {
   RiTrophyLine,
@@ -46,7 +47,7 @@ export default function Result() {
     if (!attemptId) return;
     api.get(`/attempts/${attemptId}/result`)
       .then((r) => setResult(r.data))
-      .catch((err: any) => setError(String(err.response?.data?.error || 'Could not load result.')))
+      .catch((err: any) => setError(extractError(err, 'Could not load result.')))
       .finally(() => setLoading(false));
   }, [attemptId]);
 

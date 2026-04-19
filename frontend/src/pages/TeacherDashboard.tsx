@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import { extractError } from '../api/errorUtils';
 import Spinner from '../components/Spinner';
 import {
   RiAddCircleLine,
@@ -32,7 +33,7 @@ export default function TeacherDashboard() {
     setLoading(true);
     api.get('/exams/my/exams')
       .then((r) => setExams(r.data))
-      .catch((err: any) => setError(String(err.response?.data?.error || 'Failed to load your exams.')))
+      .catch((err: any) => setError(extractError(err, 'Failed to load your exams.')))
       .finally(() => setLoading(false));
   };
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import { extractError } from '../api/errorUtils';
 import Spinner from '../components/Spinner';
 import {
   RiTimeLine,
@@ -41,7 +42,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     api.get('/exams')
       .then((r) => setExams(r.data))
-      .catch((err: any) => setError(String(err.response?.data?.error || 'Failed to load exams.')))
+      .catch((err: any) => setError(extractError(err, 'Failed to load exams.')))
       .finally(() => setLoadingExams(false));
   }, []);
 
@@ -50,7 +51,7 @@ export default function StudentDashboard() {
     setLoadingHistory(true);
     api.get('/attempts/history')
       .then((r) => setHistory(r.data))
-      .catch((err: any) => setError(String(err.response?.data?.error || 'Failed to load history.')))
+      .catch((err: any) => setError(extractError(err, 'Failed to load history.')))
       .finally(() => setLoadingHistory(false));
   };
 

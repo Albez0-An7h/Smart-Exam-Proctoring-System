@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import { extractError } from '../api/errorUtils';
 
 export default function Login() {
   const { login } = useAuth();
@@ -22,7 +23,7 @@ export default function Login() {
       const role = res.data.user?.role || '';
       navigate(role === 'TEACHER' ? '/teacher' : '/dashboard');
     } catch (err: any) {
-      setError(String(err.response?.data?.error || 'Invalid credentials.'));
+      setError(extractError(err, 'Invalid credentials.'));
     } finally {
       setLoading(false);
     }

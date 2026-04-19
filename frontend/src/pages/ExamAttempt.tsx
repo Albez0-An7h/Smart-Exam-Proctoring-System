@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { extractError } from '../api/errorUtils';
 import Spinner from '../components/Spinner';
 import Timer from '../components/Timer';
 import { RiSendPlaneLine, RiSaveLine, RiAlertLine } from 'react-icons/ri';
@@ -43,7 +44,7 @@ export default function ExamAttempt() {
     if (!examId) return;
     api.get(`/exams/${examId}`)
       .then((r) => setExam(r.data))
-      .catch((err: any) => setError(String(err.response?.data?.error || 'Failed to load exam.')))
+      .catch((err: any) => setError(extractError(err, 'Failed to load exam.')))
       .finally(() => setLoading(false));
   }, [examId]);
 
