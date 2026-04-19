@@ -6,9 +6,9 @@ const examRepo = new ExamRepository();
 const questionRepo = new QuestionRepository();
 
 export class ExamService {
-  async createExam(title: string, duration: number, teacherId: string, startTime?: string, endTime?: string) {
+  async createExam(title: string, duration: number, teacherId: string) {
     if (!title || !duration) throw new Error('Title and duration are required');
-    return examRepo.create({ title, duration, teacherId, startTime, endTime });
+    return examRepo.create({ title, duration, teacherId });
   }
 
   async addQuestion(examId: string, teacherId: string, questionData: any) {

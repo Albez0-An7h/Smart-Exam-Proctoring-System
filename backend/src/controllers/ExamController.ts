@@ -6,9 +6,9 @@ const examService = new ExamService();
 export class ExamController {
   async createExam(req: Request, res: Response) {
     try {
-      const { title, duration, startTime, endTime } = req.body;
+      const { title, duration } = req.body;
       const teacherId = req.user!.id;
-      const exam = await examService.createExam(title, duration, teacherId, startTime, endTime);
+      const exam = await examService.createExam(title, duration, teacherId);
       res.status(201).json(exam);
     } catch (err: any) {
       res.status(400).json({ error: err.message });

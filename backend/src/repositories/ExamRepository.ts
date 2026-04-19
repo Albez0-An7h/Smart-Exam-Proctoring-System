@@ -1,7 +1,7 @@
 import { prisma } from '../app';
 
 export class ExamRepository {
-  async create(data: { title: string; duration: number; teacherId: string; startTime?: string; endTime?: string }) {
+  async create(data: { title: string; duration: number; teacherId: string }) {
     return prisma.exam.create({ data });
   }
 

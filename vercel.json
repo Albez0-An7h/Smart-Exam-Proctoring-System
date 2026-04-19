@@ -11,25 +11,8 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.ts"
-    },
-    {
-      "src": "^/(assets/.*)$",
-      "dest": "/frontend/$1"
-    },
-    {
-      "src": "^/([^/]+\\.(js|css|svg|png|jpg|jpeg|gif|ico|ttf|woff|woff2|webmanifest|json|txt))$",
-      "dest": "/frontend/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/index.html"
-    }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.ts" },
+    { "source": "/(.*)", "destination": "/frontend/$1" }
   ]
 }
