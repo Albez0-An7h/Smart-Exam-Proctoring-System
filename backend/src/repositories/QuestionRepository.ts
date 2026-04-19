@@ -1,4 +1,4 @@
-import { prisma } from '../index';
+import { prisma } from '../app';
 import { QuestionType } from '../../generated/prisma/enums';
 
 interface CreateQuestionData {

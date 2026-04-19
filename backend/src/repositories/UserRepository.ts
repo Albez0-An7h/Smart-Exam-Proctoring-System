@@ -1,4 +1,4 @@
-import { prisma } from '../index';
+import { prisma } from '../app';
 import { Role } from '../../generated/prisma/enums';
 
 export class UserRepository {

@@ -1,4 +1,4 @@
-import { prisma } from '../index';
+import { prisma } from '../app';
 import { AttemptStatus } from '../../generated/prisma/enums';
 
 export class AttemptRepository {

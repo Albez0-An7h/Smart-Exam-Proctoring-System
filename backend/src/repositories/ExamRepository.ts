@@ -1,4 +1,4 @@
-import { prisma } from '../index';
+import { prisma } from '../app';
 
 export class ExamRepository {
   async create(data: { title: string; duration: number; teacherId: string }) {

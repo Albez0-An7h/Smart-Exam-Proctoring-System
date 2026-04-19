@@ -1,4 +1,4 @@
-import { prisma } from '../index';
+import { prisma } from '../app';
 
 export class SubmissionRepository {
   async upsert(attemptId: string, questionId: string, answer: string) {
