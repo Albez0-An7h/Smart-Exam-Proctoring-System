@@ -13,7 +13,7 @@ export class AuthService {
     const hashed = await bcrypt.hash(password, 10);
     const user = await userRepo.create({ name, email, password: hashed, role: role as Role });
 
-    const token = signToken({ id: user.id, email: user.email, role: user.role });
+    const token = signToken({ id: user.id, email: user.email, name: user.name, role: user.role });
     return { token, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
   }
 
@@ -24,7 +24,7 @@ export class AuthService {
     const match = await bcrypt.compare(password, user.password);
     if (!match) throw new Error('Invalid email or password');
 
-    const token = signToken({ id: user.id, email: user.email, role: user.role });
+    const token = signToken({ id: user.id, email: user.email, name: user.name, role: user.role });
     return { token, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
   }
 }

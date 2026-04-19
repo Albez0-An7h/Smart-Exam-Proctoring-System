@@ -12,8 +12,8 @@ router.post('/attempts/:id/answer', authenticate, requireRole('STUDENT'), attemp
 
 router.post('/attempts/:id/submit', authenticate, requireRole('STUDENT'), attemptController.submitExam.bind(attemptController));
 
-router.get('/attempts/:id/result', authenticate, attemptController.getResult.bind(attemptController));
-
 router.get('/attempts/history', authenticate, requireRole('STUDENT'), attemptController.getHistory.bind(attemptController));
+
+router.get('/attempts/:id/result', authenticate, attemptController.getResult.bind(attemptController));
 
 export default router;

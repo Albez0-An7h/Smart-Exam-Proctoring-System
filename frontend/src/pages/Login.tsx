@@ -22,7 +22,7 @@ export default function Login() {
       const role = res.data.user?.role || '';
       navigate(role === 'TEACHER' ? '/teacher' : '/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid credentials.');
+      setError(String(err.response?.data?.error || 'Invalid credentials.'));
     } finally {
       setLoading(false);
     }

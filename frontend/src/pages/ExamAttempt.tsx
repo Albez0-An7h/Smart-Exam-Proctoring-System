@@ -43,7 +43,7 @@ export default function ExamAttempt() {
     if (!examId) return;
     api.get(`/exams/${examId}`)
       .then((r) => setExam(r.data))
-      .catch(() => setError('Failed to load exam.'))
+      .catch((err: any) => setError(String(err.response?.data?.error || 'Failed to load exam.')))
       .finally(() => setLoading(false));
   }, [examId]);
 

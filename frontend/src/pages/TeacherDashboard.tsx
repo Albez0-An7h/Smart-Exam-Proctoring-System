@@ -32,7 +32,7 @@ export default function TeacherDashboard() {
     setLoading(true);
     api.get('/exams/my/exams')
       .then((r) => setExams(r.data))
-      .catch(() => setError('Failed to load your exams.'))
+      .catch((err: any) => setError(String(err.response?.data?.error || 'Failed to load your exams.')))
       .finally(() => setLoading(false));
   };
 

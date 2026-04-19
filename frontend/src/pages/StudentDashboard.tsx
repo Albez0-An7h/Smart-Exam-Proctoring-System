@@ -41,7 +41,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     api.get('/exams')
       .then((r) => setExams(r.data))
-      .catch(() => setError('Failed to load exams.'))
+      .catch((err: any) => setError(String(err.response?.data?.error || 'Failed to load exams.')))
       .finally(() => setLoadingExams(false));
   }, []);
 
@@ -50,7 +50,7 @@ export default function StudentDashboard() {
     setLoadingHistory(true);
     api.get('/attempts/history')
       .then((r) => setHistory(r.data))
-      .catch(() => setError('Failed to load history.'))
+      .catch((err: any) => setError(String(err.response?.data?.error || 'Failed to load history.')))
       .finally(() => setLoadingHistory(false));
   };
 

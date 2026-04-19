@@ -46,7 +46,7 @@ export default function Result() {
     if (!attemptId) return;
     api.get(`/attempts/${attemptId}/result`)
       .then((r) => setResult(r.data))
-      .catch(() => setError('Could not load result.'))
+      .catch((err: any) => setError(String(err.response?.data?.error || 'Could not load result.')))
       .finally(() => setLoading(false));
   }, [attemptId]);
 

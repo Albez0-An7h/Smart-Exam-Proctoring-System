@@ -25,7 +25,7 @@ export default function Register() {
       login(res.data.token);
       navigate(role === 'TEACHER' ? '/teacher' : '/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed.');
+      setError(String(err.response?.data?.error || 'Registration failed.'));
     } finally {
       setLoading(false);
     }

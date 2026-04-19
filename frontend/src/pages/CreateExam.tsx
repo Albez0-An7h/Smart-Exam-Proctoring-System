@@ -106,7 +106,7 @@ export default function CreateExam() {
       setSuccess(addToExamId ? 'Questions added successfully!' : 'Exam created with questions!');
       setTimeout(() => navigate('/teacher'), 1000);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Something went wrong.');
+      setError(String(err.response?.data?.error || 'Something went wrong.'));
     } finally {
       setLoading(false);
     }
