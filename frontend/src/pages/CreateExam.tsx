@@ -217,7 +217,7 @@ export default function CreateExam() {
                     <textarea
                       id={`q${qi}-starter`}
                       className="form-control"
-                      placeholder="
+                      placeholder="Write starter code here..."
                       style={{ fontFamily: 'monospace', minHeight: 100 }}
                       value={q.starterCode}
                       onChange={(e) => updateQ(qi, { starterCode: e.target.value })}

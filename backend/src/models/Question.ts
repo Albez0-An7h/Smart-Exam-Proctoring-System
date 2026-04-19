@@ -13,9 +13,7 @@ export abstract class Question {
     public type: QuestionType
   ) {}
 
-  /**
-   * Abstract method for evaluating a specific question's answer.
-   */
+
   abstract evaluate(answer: string | any): number;
 }
 
