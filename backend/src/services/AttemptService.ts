@@ -16,8 +16,16 @@ export class AttemptService {
     if (exam.status !== 'PUBLISHED') throw new Error('Exam is not published');
 
     const existing = await attemptRepo.findByStudentAndExam(studentId, examId);
+
+    // Resume an in-progress attempt
     const inProgress = existing.find((a: any) => a.status === 'IN_PROGRESS');
     if (inProgress) return inProgress;
+
+    // Block re-attempt if already submitted or evaluated
+    const finished = existing.find((a: any) =>
+      ['SUBMITTED', 'AUTO_SUBMITTED', 'EVALUATED'].includes(a.status)
+    );
+    if (finished) throw new Error('You have already attempted this exam.');
 
     const attempt = await attemptRepo.create({ studentId, examId });
     return attempt;

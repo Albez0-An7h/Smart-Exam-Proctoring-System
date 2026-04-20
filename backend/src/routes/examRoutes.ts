@@ -14,4 +14,6 @@ router.post('/', authenticate, requireRole('TEACHER'), examController.createExam
 router.post('/:id/questions', authenticate, requireRole('TEACHER'), examController.addQuestion.bind(examController));
 router.patch('/:id/publish', authenticate, requireRole('TEACHER'), examController.publishExam.bind(examController));
 
+router.get('/:id/violations', authenticate, requireRole('TEACHER'), examController.getExamViolations.bind(examController));
+
 export default router;

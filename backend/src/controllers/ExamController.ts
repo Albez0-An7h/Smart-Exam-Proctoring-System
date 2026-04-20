@@ -64,4 +64,15 @@ export class ExamController {
       res.status(404).json({ error: err.message });
     }
   }
+
+  async getExamViolations(req: Request, res: Response) {
+    try {
+      const { id: examId } = req.params;
+      const teacherId = req.user!.id;
+      const violations = await examService.getExamViolations(String(examId), teacherId);
+      res.json(violations);
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  }
 }

@@ -9,7 +9,11 @@ export class AttemptRepository {
   async findById(id: string) {
     return prisma.attempt.findUnique({
       where: { id },
-      include: { submissions: true, proctorLogs: true, exam: { include: { questions: { include: { testCases: true } } } } },
+      include: {
+        submissions: { include: { question: true } },
+        proctorLogs: true,
+        exam: { include: { questions: { include: { testCases: true } } } },
+      },
     });
   }
 
@@ -27,5 +31,16 @@ export class AttemptRepository {
 
   async updateStatus(id: string, status: AttemptStatus, extras?: { endTime?: Date; totalScore?: number }) {
     return prisma.attempt.update({ where: { id }, data: { status, ...extras } });
+  }
+
+  async findViolationsByExam(examId: string) {
+    return prisma.attempt.findMany({
+      where: { examId },
+      include: {
+        proctorLogs: true,
+        student: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { startTime: 'desc' },
+    });
   }
 }
