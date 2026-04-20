@@ -9,6 +9,7 @@ import {
   RiFileListLine,
   RiTrophyLine,
   RiCalendarLine,
+  RiCheckboxCircleLine,
 } from 'react-icons/ri';
 
 interface Exam {
@@ -27,6 +28,7 @@ interface Attempt {
   totalScore: number;
   startTime: string;
   exam: { title: string };
+  examId?: string;
 }
 
 export default function StudentDashboard() {
@@ -39,10 +41,29 @@ export default function StudentDashboard() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState('');
 
+  // Track which exam IDs the student has already finished
+  const [attemptedExamIds, setAttemptedExamIds] = useState<Set<string>>(new Set());
+
   useEffect(() => {
-    api.get('/exams')
-      .then((r) => setExams(r.data))
-      .catch((err: any) => setError(extractError(err, 'Failed to load exams.')))
+    // Load exams and history in parallel so we can disable already-attempted exams immediately
+    setLoadingExams(true);
+    Promise.all([
+      api.get('/exams'),
+      api.get('/attempts/history'),
+    ])
+      .then(([examsRes, historyRes]) => {
+        setExams(examsRes.data);
+        const hist: Attempt[] = historyRes.data;
+        setHistory(hist);
+        const finished = new Set(
+          hist
+            .filter((a) => ['SUBMITTED', 'AUTO_SUBMITTED', 'EVALUATED'].includes(a.status))
+            .map((a) => a.examId!)
+            .filter(Boolean)
+        );
+        setAttemptedExamIds(finished);
+      })
+      .catch((err: any) => setError(extractError(err, 'Failed to load data.')))
       .finally(() => setLoadingExams(false));
   }, []);
 
@@ -50,7 +71,9 @@ export default function StudentDashboard() {
     if (history.length) return;
     setLoadingHistory(true);
     api.get('/attempts/history')
-      .then((r) => setHistory(r.data))
+      .then((r) => {
+        setHistory(r.data);
+      })
       .catch((err: any) => setError(extractError(err, 'Failed to load history.')))
       .finally(() => setLoadingHistory(false));
   };
@@ -120,31 +143,46 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="grid-2">
-                  {exams.map((exam) => (
-                    <div key={exam.id} className="exam-card">
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                        <p className="exam-card-title">{exam.title}</p>
-                        <span className="badge badge-accent">Live</span>
-                      </div>
-                      {exam.teacher && (
-                        <p style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>by {exam.teacher.name}</p>
-                      )}
-                      <div className="exam-meta">
-                        <span><RiTimeLine size={12} /> {exam.duration} min</span>
-                        {exam.startTime && (
-                          <span><RiCalendarLine size={12} /> {new Date(exam.startTime).toLocaleDateString()}</span>
+                  {exams.map((exam) => {
+                    const attempted = attemptedExamIds.has(exam.id);
+                    return (
+                      <div key={exam.id} className="exam-card">
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                          <p className="exam-card-title">{exam.title}</p>
+                          {attempted ? (
+                            <span className="badge badge-success" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <RiCheckboxCircleLine size={11} /> Attempted
+                            </span>
+                          ) : (
+                            <span className="badge badge-accent">Live</span>
+                          )}
+                        </div>
+                        {exam.teacher && (
+                          <p style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>by {exam.teacher.name}</p>
+                        )}
+                        <div className="exam-meta">
+                          <span><RiTimeLine size={12} /> {exam.duration} min</span>
+                          {exam.startTime && (
+                            <span><RiCalendarLine size={12} /> {new Date(exam.startTime).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                        {attempted ? (
+                          <p style={{ fontSize: '0.78rem', color: 'var(--success)', marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <RiCheckboxCircleLine size={13} /> You have already submitted this exam.
+                          </p>
+                        ) : (
+                          <button
+                            id={`start-exam-${exam.id}`}
+                            className="btn btn-primary"
+                            style={{ alignSelf: 'flex-start', marginTop: '0.25rem' }}
+                            onClick={() => startExam(exam.id)}
+                          >
+                            Start →
+                          </button>
                         )}
                       </div>
-                      <button
-                        id={`start-exam-${exam.id}`}
-                        className="btn btn-primary"
-                        style={{ alignSelf: 'flex-start', marginTop: '0.25rem' }}
-                        onClick={() => startExam(exam.id)}
-                      >
-                        Start →
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )
             )}

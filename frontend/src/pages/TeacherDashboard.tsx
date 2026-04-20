@@ -12,7 +12,9 @@ import {
   RiFileListLine,
   RiCheckboxCircleLine,
   RiDraftLine,
+  RiAlertLine,
 } from 'react-icons/ri';
+import Modal from '../components/Modal';
 
 interface Exam {
   id: string;
@@ -29,6 +31,13 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Modals state
+  const [publishModalId, setPublishModalId] = useState<string | null>(null);
+  const [errorModalMsg, setErrorModalMsg] = useState('');
+  const [violationsModalId, setViolationsModalId] = useState<string | null>(null);
+  const [violationsData, setViolationsData] = useState<any[]>([]);
+  const [loadingViolations, setLoadingViolations] = useState(false);
+
   const fetchExams = () => {
     setLoading(true);
     api.get('/exams/my/exams')
@@ -39,13 +48,29 @@ export default function TeacherDashboard() {
 
   useEffect(() => { fetchExams(); }, []);
 
-  const publishExam = async (id: string) => {
-    if (!confirm('Publish this exam? Students will be able to see and attempt it.')) return;
+  const publishExam = async () => {
+    if (!publishModalId) return;
     try {
-      await api.patch(`/exams/${id}/publish`);
+      await api.patch(`/exams/${publishModalId}/publish`);
+      setPublishModalId(null);
       fetchExams();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Could not publish.');
+      setPublishModalId(null);
+      setErrorModalMsg(err.response?.data?.error || 'Could not publish.');
+    }
+  };
+
+  const fetchViolations = async (examId: string) => {
+    setViolationsModalId(examId);
+    setLoadingViolations(true);
+    try {
+      const res = await api.get(`/exams/${examId}/violations`);
+      setViolationsData(res.data);
+    } catch (err: any) {
+      setErrorModalMsg(err.response?.data?.error || 'Could not fetch violations.');
+      setViolationsModalId(null);
+    } finally {
+      setLoadingViolations(false);
     }
   };
 
@@ -59,6 +84,81 @@ export default function TeacherDashboard() {
 
   return (
     <div className="page">
+      {/* ── Publish Confirmation Modal ── */}
+      <Modal
+        open={!!publishModalId}
+        variant="confirm"
+        title="Publish Exam"
+        message="Are you sure you want to publish this exam? Once published, students will be able to see and attempt it."
+        confirmLabel="Yes, Publish"
+        onConfirm={publishExam}
+        onCancel={() => setPublishModalId(null)}
+      />
+
+      {/* ── Error Alert Modal ── */}
+      <Modal
+        open={!!errorModalMsg}
+        variant="danger"
+        title="Error"
+        message={errorModalMsg}
+        confirmLabel="OK"
+        onConfirm={() => setErrorModalMsg('')}
+      />
+
+      {/* ── Violations Modal ── */}
+      {violationsModalId && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+            animation: 'fadeIn 0.15s ease'
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setViolationsModalId(null); }}
+        >
+          <div style={{
+            background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 640,
+            maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+            boxShadow: '0 24px 56px rgba(0,0,0,0.5)', animation: 'modalSlideIn 0.2s ease'
+          }}>
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Proctoring Violations</h2>
+              <p className="text-sm text-muted">Tab switches and window blurs recorded during attempts.</p>
+            </div>
+            <div style={{ padding: '1.5rem', overflowY: 'auto' }}>
+              {loadingViolations ? <Spinner /> : (
+                violationsData.length === 0 ? (
+                  <p className="text-muted text-center py-4">No violations recorded yet.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {violationsData.map((v: any) => (
+                      <div key={v.attemptId} className="card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <p style={{ fontWeight: 600 }}>{v.studentName}</p>
+                          <p className="text-sm text-muted">{v.studentEmail}</p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span className={`badge ${v.violationCount > 0 ? 'badge-danger' : 'badge-success'}`}>
+                            {v.violationCount > 0 ? 
+                              <><RiAlertLine size={12} style={{ marginRight: '4px' }}/> {v.violationCount} Violations</> 
+                              : 'Clean Attempt'
+                            }
+                          </span>
+                          <p className="text-sm text-muted" style={{ marginTop: '0.3rem' }}>Score: {v.score}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
+            <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid var(--border)', textAlign: 'right' }}>
+              <button className="btn btn-ghost" onClick={() => setViolationsModalId(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <div>
@@ -127,9 +227,19 @@ export default function TeacherDashboard() {
                       <button
                         id={`publish-exam-${exam.id}`}
                         className="btn btn-success text-sm"
-                        onClick={() => publishExam(exam.id)}
+                        onClick={() => setPublishModalId(exam.id)}
                       >
                         Publish
+                      </button>
+                    )}
+                    {(exam._count?.attempts ?? 0) > 0 && (
+                      <button
+                        id={`view-violations-${exam.id}`}
+                        className="btn btn-ghost text-sm"
+                        style={{ color: 'var(--danger)' }}
+                        onClick={() => fetchViolations(exam.id)}
+                      >
+                        <RiAlertLine size={14} style={{ display: 'inline', verticalAlign: 'text-bottom' }}/> Violations
                       </button>
                     )}
                   </div>

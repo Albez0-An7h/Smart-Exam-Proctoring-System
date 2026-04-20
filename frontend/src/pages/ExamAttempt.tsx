@@ -4,15 +4,16 @@ import api from '../api/axios';
 import { extractError } from '../api/errorUtils';
 import Spinner from '../components/Spinner';
 import Timer from '../components/Timer';
+import Modal from '../components/Modal';
 import { RiSendPlaneLine, RiSaveLine, RiAlertLine } from 'react-icons/ri';
 
-interface Option { id: string; text: string; isCorrect?: boolean; }
+// Options are stored as plain strings in the DB (TEXT[])
 interface Question {
   id: string;
   type: 'MCQ' | 'SUBJECTIVE' | 'CODING';
   text: string;
   marks: number;
-  options: Option[];
+  options: string[];
   starterCode?: string;
 }
 interface ExamDetail {
@@ -36,10 +37,17 @@ export default function ExamAttempt() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [proctorWarnings, setProctorWarnings] = useState(0);
+  const [showWarning, setShowWarning] = useState(false);
+  const [submitModalOpen, setSubmitModalOpen] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [error, setError] = useState('');
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const warnTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ref so the proctor handler always reads the latest value without re-registering
+  const submittingRef = useRef(false);
+  useEffect(() => { submittingRef.current = submitting; }, [submitting]);
 
-  /* ── Load exam ──────────────────────────── */
+  /* ── Load exam ─────────────────────────── */
   useEffect(() => {
     if (!examId) return;
     api.get(`/exams/${examId}`)
@@ -48,17 +56,32 @@ export default function ExamAttempt() {
       .finally(() => setLoading(false));
   }, [examId]);
 
-  /* ── Proctoring: tab switch ─────────────── */
+  /* ── Proctoring: tab switch only ────────
+     • Only visibilitychange — window.blur fires on confirm dialogs, causing false positives
+     • Guard: skip if exam is being submitted                                    */
   useEffect(() => {
     if (!attemptId) return;
-    const onVisibility = () => {
-      if (document.hidden) {
-        setProctorWarnings((w) => w + 1);
-        api.post('/proctor/log', { attemptId, eventType: 'TAB_SWITCH' }).catch(() => {});
-      }
+
+    const triggerWarning = (eventType: string) => {
+      // Do not flag during form submission / confirm dialog
+      if (submittingRef.current) return;
+
+      setProctorWarnings((w) => w + 1);
+      setShowWarning(true);
+      api.post(`/proctor/attempts/${attemptId}/events`, { eventType }).catch(() => {});
+      if (warnTimeout.current) clearTimeout(warnTimeout.current);
+      warnTimeout.current = setTimeout(() => setShowWarning(false), 4000);
     };
+
+    const onVisibility = () => {
+      if (document.hidden) triggerWarning('TAB_SWITCH');
+    };
+
     document.addEventListener('visibilitychange', onVisibility);
-    return () => document.removeEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      if (warnTimeout.current) clearTimeout(warnTimeout.current);
+    };
   }, [attemptId]);
 
   /* ── Auto-save answer ───────────────────── */
@@ -93,15 +116,16 @@ export default function ExamAttempt() {
   };
 
   /* ── Submit ─────────────────────────────── */
-  const submitExam = async () => {
+  const doSubmit = async () => {
     if (!attemptId) return;
-    if (!confirm('Submit exam? You cannot change answers after this.')) return;
+    setSubmitModalOpen(false);
     setSubmitting(true);
+    setSubmitError('');
     try {
       await api.post(`/attempts/${attemptId}/submit`);
       navigate(`/result/${attemptId}`);
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Could not submit. Try again.');
+      setSubmitError(err.response?.data?.error || 'Could not submit. Try again.');
     } finally {
       setSubmitting(false);
     }
@@ -109,6 +133,7 @@ export default function ExamAttempt() {
 
   const handleTimerExpire = async () => {
     if (!attemptId) return;
+    setSubmitting(true);
     try { await api.post(`/attempts/${attemptId}/submit`); } catch { /* ignore */ }
     navigate(`/result/${attemptId}`);
   };
@@ -126,6 +151,71 @@ export default function ExamAttempt() {
 
   return (
     <div className="page">
+      {/* ── Submit confirmation modal ── */}
+      <Modal
+        open={submitModalOpen}
+        variant="danger"
+        title="Submit Exam"
+        message={`You have answered ${answered} of ${exam.questions.length} question${exam.questions.length !== 1 ? 's' : ''}. You cannot change your answers after submitting.`}
+        confirmLabel="Yes, Submit"
+        cancelLabel="Go Back"
+        onConfirm={doSubmit}
+        onCancel={() => setSubmitModalOpen(false)}
+      />
+
+      {/* ── Submit error modal ── */}
+      <Modal
+        open={!!submitError}
+        variant="alert"
+        title="Submission Failed"
+        message={submitError}
+        confirmLabel="OK"
+        onConfirm={() => setSubmitError('')}
+      />
+
+      {/* ── Proctoring warning banner ── */}
+      {showWarning && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+            paddingTop: '4rem', pointerEvents: 'none',
+          }}
+        >
+          <div
+            style={{
+              background: 'var(--danger, #dc2626)',
+              color: '#fff',
+              borderRadius: 12,
+              padding: '1rem 1.6rem',
+              maxWidth: 480,
+              width: '90%',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              animation: 'warnSlideIn 0.25s ease',
+              pointerEvents: 'auto',
+            }}
+          >
+            <RiAlertLine size={22} style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.15rem' }}>
+                ⚠️ Tab switch detected!
+              </p>
+              <p style={{ fontSize: '0.82rem', opacity: 0.9 }}>
+                Incident recorded. Violation #{proctorWarnings} — stay on this page.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowWarning(false)}
+              style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1 }}
+              aria-label="Dismiss"
+            >✕</button>
+          </div>
+        </div>
+      )}
+
       <div className="container" style={{ maxWidth: 800 }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
@@ -136,7 +226,7 @@ export default function ExamAttempt() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {proctorWarnings > 0 && (
               <span className="badge badge-warning" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <RiAlertLine size={12} /> {proctorWarnings} warning{proctorWarnings > 1 ? 's' : ''}
+                <RiAlertLine size={12} /> {proctorWarnings} violation{proctorWarnings > 1 ? 's' : ''}
               </span>
             )}
             <Timer durationMinutes={exam.duration} onExpire={handleTimerExpire} />
@@ -178,16 +268,16 @@ export default function ExamAttempt() {
             {/* MCQ */}
             {q.type === 'MCQ' && (
               <div className="option-list">
-                {q.options.map((opt) => {
-                  const sel = ((answers[q.id] as string[]) || []).includes(opt.text);
+                {q.options.map((opt, oi) => {
+                  const sel = ((answers[q.id] as string[]) || []).includes(opt);
                   return (
-                    <label key={opt.id} className={`option-item ${sel ? 'selected' : ''}`} id={`opt-${opt.id}`}>
+                    <label key={oi} className={`option-item ${sel ? 'selected' : ''}`} id={`opt-${q.id}-${oi}`}>
                       <input
                         type="checkbox"
                         checked={sel}
-                        onChange={() => toggleOption(q.id, opt.text)}
+                        onChange={() => toggleOption(q.id, opt)}
                       />
-                      {opt.text}
+                      {opt}
                     </label>
                   );
                 })}
@@ -255,7 +345,7 @@ export default function ExamAttempt() {
             <button
               id="submit-exam"
               className="btn btn-danger"
-              onClick={submitExam}
+              onClick={() => setSubmitModalOpen(true)}
               disabled={submitting}
             >
               <RiSendPlaneLine size={14} /> {submitting ? 'Submitting…' : 'Submit Exam'}
