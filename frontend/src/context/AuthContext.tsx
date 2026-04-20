@@ -17,6 +17,7 @@ interface AuthContextType {
   login: (token: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  initializing: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [user, setUser] = useState<JwtPayload | null>(null);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     if (token) {
@@ -38,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout();
       }
     }
+    setInitializing(false);
   }, [token]);
 
   const login = (newToken: string) => {
@@ -52,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!user, initializing }}>
       {children}
     </AuthContext.Provider>
   );
