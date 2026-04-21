@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { RiAlertLine, RiCheckboxCircleLine, RiInformationLine, RiCloseLine } from 'react-icons/ri';
 
 type ModalVariant = 'confirm' | 'alert' | 'danger';
@@ -14,7 +14,7 @@ interface ModalProps {
   onCancel?: () => void;
 }
 
-const icons: Record<ModalVariant, JSX.Element> = {
+const icons: Record<ModalVariant, ReactNode> = {
   confirm: <RiInformationLine size={22} style={{ color: 'var(--accent)' }} />,
   alert: <RiCheckboxCircleLine size={22} style={{ color: 'var(--success)' }} />,
   danger: <RiAlertLine size={22} style={{ color: 'var(--danger)' }} />,
