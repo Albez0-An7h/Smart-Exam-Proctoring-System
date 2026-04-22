@@ -7,9 +7,10 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"]
   },
-  "include": ["src/**/*", "generated/**/*"],
+  "include": ["*.ts", "src/**/*", "generated/**/*"],
   "exclude": ["node_modules"],
   "ts-node": {
     "files": true

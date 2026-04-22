@@ -5,8 +5,9 @@
   "scripts": {
     "start": "node dist/src/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "npx prisma generate --schema=prisma/schema.prisma && tsc",
+    "build": "prisma generate && tsc",
     "migrate": "node run-migration.cjs",
+    "migrate:deploy": "prisma migrate deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
