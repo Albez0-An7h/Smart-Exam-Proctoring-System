@@ -2,7 +2,7 @@ import { ExamRepository } from '../repositories/ExamRepository';
 import { QuestionRepository } from '../repositories/QuestionRepository';
 import { AttemptRepository } from '../repositories/AttemptRepository';
 import { QuestionFactory } from './QuestionFactory';
-import { QuestionType as PrismaQuestionType } from '../../generated/prisma/enums';
+import { QuestionType as PrismaQuestionType } from '@prisma/client';
 import { QuestionType as DomainQuestionType } from '../models/Question';
 import type { CreateQuestionData } from '../repositories/QuestionRepository';
 

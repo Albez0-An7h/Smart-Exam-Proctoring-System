@@ -2,18 +2,14 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { routes } from './routes';
 
 let prismaInstance: PrismaClient | null = null;
 
 export function getPrisma(): PrismaClient {
   if (!prismaInstance) {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    const adapter = new PrismaPg(pool);
-    prismaInstance = new PrismaClient({ adapter });
+    prismaInstance = new PrismaClient();
   }
   return prismaInstance;
 }

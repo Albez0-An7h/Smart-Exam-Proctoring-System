@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { Role } from '../../generated/prisma/enums';
+import { Role } from '@prisma/client';
 
 const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'super_secret_dev_key');
 const JWT_EXPIRES_IN = '7d';

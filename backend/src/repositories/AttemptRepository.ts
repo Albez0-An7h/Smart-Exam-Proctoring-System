@@ -1,5 +1,5 @@
 import { prisma } from '../app';
-import { AttemptStatus } from '../../generated/prisma/enums';
+import { AttemptStatus } from '@prisma/client';
 
 export class AttemptRepository {
   async create(data: { studentId: string; examId: string }) {

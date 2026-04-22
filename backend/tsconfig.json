@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["*.ts", "src/**/*", "generated/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules"],
   "ts-node": {
     "files": true

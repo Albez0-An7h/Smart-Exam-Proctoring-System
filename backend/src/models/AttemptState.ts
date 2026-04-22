@@ -1,4 +1,4 @@
-import { AttemptStatus } from '../../generated/prisma/enums';
+import { AttemptStatus } from '@prisma/client';
 
 export abstract class AttemptState {
   abstract nextState(): AttemptState;

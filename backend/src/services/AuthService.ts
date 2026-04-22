@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { UserRepository } from '../repositories/UserRepository';
 import { signToken } from '../utils/jwt';
-import { Role } from '../../generated/prisma/enums';
+import { Role } from '@prisma/client';
 
 export class AuthService {
   constructor(private readonly userRepo: UserRepository = new UserRepository()) {}

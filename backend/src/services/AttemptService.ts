@@ -3,7 +3,7 @@ import { AttemptRepository } from '../repositories/AttemptRepository';
 import { SubmissionRepository } from '../repositories/SubmissionRepository';
 import { EvaluationService } from './EvaluationService';
 import { AttemptContext, InProgressState, SubmittedState } from '../models/AttemptState';
-import { AttemptStatus } from '../../generated/prisma/enums';
+import { AttemptStatus } from '@prisma/client';
 
 interface AttemptWithStatus {
   status: string;

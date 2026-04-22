@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node dist/src/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "npx prisma generate --schema=prisma/schema.prisma && npx tsc",
+    "build": "npm install && npx prisma generate --schema=prisma/schema.prisma && npx tsc",
     "migrate": "node run-migration.cjs",
     "migrate:deploy": "prisma migrate deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,8 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@prisma/client": "^5.22.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -29,7 +28,7 @@
     "jsonwebtoken": "^9.0.3",
     "nodemon": "^3.1.14",
     "pg": "^8.20.0",
-    "prisma": "^7.8.0",
+    "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2"
   }
