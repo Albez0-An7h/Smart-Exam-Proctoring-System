@@ -5,6 +5,10 @@ import { EvaluationService } from './EvaluationService';
 import { AttemptContext, InProgressState, SubmittedState } from '../models/AttemptState';
 import { AttemptStatus } from '../../generated/prisma/enums';
 
+interface AttemptWithStatus {
+  status: string;
+}
+
 export class AttemptService {
   constructor(
     private readonly examRepo: ExamRepository = new ExamRepository(),
@@ -35,11 +39,11 @@ export class AttemptService {
     const existing = await this.attemptRepo.findByStudentAndExam(studentId, examId);
 
     // Resume an in-progress attempt
-    const inProgress = existing.find((a) => a.status === 'IN_PROGRESS');
+    const inProgress = existing.find((a: AttemptWithStatus) => a.status === 'IN_PROGRESS');
     if (inProgress) return inProgress;
 
     // Block re-attempt if already submitted or evaluated
-    const finished = existing.find((a) =>
+    const finished = existing.find((a: AttemptWithStatus) =>
       ['SUBMITTED', 'AUTO_SUBMITTED', 'EVALUATED'].includes(a.status)
     );
     if (finished) throw new Error('You have already attempted this exam.');

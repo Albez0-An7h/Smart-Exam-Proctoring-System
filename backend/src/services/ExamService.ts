@@ -31,6 +31,17 @@ interface ExamViolationResult {
   score: number;
 }
 
+interface ViolationAttemptRecord {
+  id: string;
+  student: {
+    name: string;
+    email: string;
+  };
+  proctorLogs: unknown[];
+  status: string;
+  totalScore: number;
+}
+
 export class ExamService {
   constructor(
     private readonly examRepo: ExamRepository = new ExamRepository(),
@@ -132,7 +143,7 @@ export class ExamService {
 
     const attempts = await this.attemptRepo.findViolationsByExam(examId);
     // map to include student details and proctor log counts
-    return attempts.map((a) => ({
+    return attempts.map((a: ViolationAttemptRecord) => ({
       attemptId: a.id,
       studentName: a.student.name,
       studentEmail: a.student.email,
