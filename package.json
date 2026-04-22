@@ -1,17 +1,17 @@
 {
   "private": true,
   "scripts": {
-    "postinstall": "npx prisma generate --schema=backend/prisma/schema.prisma"
+    "postinstall": "cd backend && npx prisma generate --schema=prisma/schema.prisma"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.7.0",
-    "@prisma/client": "^7.7.0",
+    "@prisma/adapter-pg": "^6.16.2",
+    "@prisma/client": "^6.16.2",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
-    "prisma": "^7.7.0"
+    "prisma": "^6.16.2"
   }
 }
