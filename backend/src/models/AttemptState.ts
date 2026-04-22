@@ -1,13 +1,15 @@
+import { AttemptStatus } from '../../generated/prisma/enums';
+
 export abstract class AttemptState {
   abstract nextState(): AttemptState;
-  abstract getStatus(): string;
+  abstract getStatus(): AttemptStatus;
 }
 
 export class NotStartedState extends AttemptState {
   nextState(): AttemptState {
     return new InProgressState();
   }
-  getStatus(): string {
+  getStatus(): AttemptStatus {
     return 'NOT_STARTED';
   }
 }
@@ -16,7 +18,7 @@ export class InProgressState extends AttemptState {
   nextState(): AttemptState {
     return new SubmittedState();
   }
-  getStatus(): string {
+  getStatus(): AttemptStatus {
     return 'IN_PROGRESS';
   }
 }
@@ -25,7 +27,7 @@ export class SubmittedState extends AttemptState {
   nextState(): AttemptState {
     return new EvaluatedState();
   }
-  getStatus(): string {
+  getStatus(): AttemptStatus {
     return 'SUBMITTED';
   }
 }
@@ -34,13 +36,21 @@ export class EvaluatedState extends AttemptState {
   nextState(): AttemptState {
     return this;
   }
-  getStatus(): string {
+  getStatus(): AttemptStatus {
     return 'EVALUATED';
   }
 }
 
 export class AttemptContext {
   private state: AttemptState;
+
+  private static readonly allowedTransitions: Record<AttemptStatus, AttemptStatus[]> = {
+    NOT_STARTED: ['IN_PROGRESS'],
+    IN_PROGRESS: ['SUBMITTED'],
+    SUBMITTED: ['EVALUATED'],
+    AUTO_SUBMITTED: ['EVALUATED'],
+    EVALUATED: ['EVALUATED'],
+  };
 
   constructor() {
     this.state = new NotStartedState();
@@ -51,10 +61,19 @@ export class AttemptContext {
   }
 
   proceedToNextState() {
-    this.state = this.state.nextState();
+    const currentStatus = this.state.getStatus();
+    const nextState = this.state.nextState();
+    const nextStatus = nextState.getStatus();
+    const allowed = AttemptContext.allowedTransitions[currentStatus] ?? [];
+
+    if (!allowed.includes(nextStatus)) {
+      throw new Error(`Invalid attempt transition: ${currentStatus} -> ${nextStatus}`);
+    }
+
+    this.state = nextState;
   }
 
-  getCurrentStatus(): string {
+  getCurrentStatus(): AttemptStatus {
     return this.state.getStatus();
   }
 }

@@ -14,7 +14,7 @@ export abstract class Question {
   ) {}
 
 
-  abstract evaluate(answer: string | any): number;
+  abstract evaluate(answer: unknown): number;
 }
 
 export class MCQQuestion extends Question {

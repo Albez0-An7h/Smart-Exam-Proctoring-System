@@ -20,7 +20,7 @@ export function getPrisma(): PrismaClient {
 
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop) {
-    return (getPrisma() as any)[prop];
+    return getPrisma()[prop as keyof PrismaClient];
   },
 });
 
@@ -40,10 +40,13 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
-  const message = typeof err.message === 'string' ? err.message : 'Internal server error';
-  res.status(err.status || 500).json({ error: message });
+  const message = err instanceof Error ? err.message : 'Internal server error';
+  const statusCode = typeof err === 'object' && err !== null && 'status' in err && typeof (err as { status: unknown }).status === 'number'
+    ? (err as { status: number }).status
+    : 500;
+  res.status(statusCode).json({ error: message });
 });
 
 export default app;

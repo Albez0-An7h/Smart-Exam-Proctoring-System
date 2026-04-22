@@ -11,7 +11,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
   const token = authHeader.split(' ')[1];
   try {
     const payload = verifyToken(token);
-    req.user = { id: payload.id, email: payload.email, role: payload.role as any };
+    req.user = { id: payload.id, email: payload.email, role: payload.role };
     next();
   } catch {
     res.status(401).json({ error: 'Invalid or expired token' });

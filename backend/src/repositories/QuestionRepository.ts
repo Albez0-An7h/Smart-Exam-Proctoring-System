@@ -1,7 +1,7 @@
 import { prisma } from '../app';
 import { QuestionType } from '../../generated/prisma/enums';
 
-interface CreateQuestionData {
+export interface CreateQuestionData {
   examId: string;
   type: QuestionType;
   text: string;

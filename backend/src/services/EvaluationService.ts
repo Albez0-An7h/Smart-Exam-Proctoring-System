@@ -1,11 +1,16 @@
 import { SubmissionRepository } from '../repositories/SubmissionRepository';
 import { EvaluationEngine, MCQEvaluationStrategy, CodingEvaluationStrategy } from './EvaluationStrategy';
 
-const submissionRepo = new SubmissionRepository();
+interface CodingTestCase {
+  input: string;
+  expectedOutput: string;
+}
 
 export class EvaluationService {
+  constructor(private readonly submissionRepo: SubmissionRepository = new SubmissionRepository()) {}
+
   async evaluateAttempt(attemptId: string): Promise<number> {
-    const submissions = await submissionRepo.findByAttempt(attemptId);
+    const submissions = await this.submissionRepo.findByAttempt(attemptId);
     let totalScore = 0;
 
     for (const sub of submissions) {
@@ -20,14 +25,14 @@ export class EvaluationService {
         const engine = new EvaluationEngine(new CodingEvaluationStrategy());
         const totalCases = qData.testCases.length;
         if (totalCases > 0) {
-          const passRatio = engine.executeEvaluation(sub.answer, qData.testCases as any[]);
+          const passRatio = engine.executeEvaluation(sub.answer, qData.testCases as CodingTestCase[]);
           score = Math.round(passRatio * qData.marks);
         }
       } else {
         score = 0;
       }
 
-      await submissionRepo.updateScore(attemptId, qData.id, score);
+      await this.submissionRepo.updateScore(attemptId, qData.id, score);
       totalScore += score;
     }
 

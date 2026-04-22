@@ -1,15 +1,15 @@
-export interface EvaluationStrategy {
-  evaluate(answer: string, correctAnswer: any): number;
+export interface EvaluationStrategy<TData> {
+  evaluate(answer: string, correctAnswer: TData): number;
 }
 
-export class MCQEvaluationStrategy implements EvaluationStrategy {
+export class MCQEvaluationStrategy implements EvaluationStrategy<string> {
   /** Returns 1 if answer matches correctAnswer, 0 otherwise. Caller multiplies by marks. */
   evaluate(answer: string, correctAnswer: string): number {
     return answer.trim() === correctAnswer.trim() ? 1 : 0;
   }
 }
 
-export class CodingEvaluationStrategy implements EvaluationStrategy {
+export class CodingEvaluationStrategy implements EvaluationStrategy<{ input: string; expectedOutput: string }[]> {
   /**
    * Returns a ratio (0.0 – 1.0) of test cases passed.
    * Each test case: { input: string, expectedOutput: string }
@@ -25,18 +25,10 @@ export class CodingEvaluationStrategy implements EvaluationStrategy {
   }
 }
 
-export class EvaluationEngine {
-  private strategy: EvaluationStrategy;
+export class EvaluationEngine<TData> {
+  constructor(private readonly strategy: EvaluationStrategy<TData>) {}
 
-  constructor(strategy: EvaluationStrategy) {
-    this.strategy = strategy;
-  }
-
-  setStrategy(strategy: EvaluationStrategy) {
-    this.strategy = strategy;
-  }
-
-  executeEvaluation(answer: string, data: any): number {
+  executeEvaluation(answer: string, data: TData): number {
     return this.strategy.evaluate(answer, data);
   }
 }

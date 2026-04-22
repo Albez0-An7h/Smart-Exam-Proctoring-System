@@ -8,7 +8,7 @@ export function requireRole(...roles: Role[]) {
       res.status(401).json({ error: 'Not authenticated' });
       return;
     }
-    if (!roles.includes(req.user.role as Role)) {
+    if (!roles.includes(req.user.role)) {
       res.status(403).json({ error: 'Forbidden: insufficient role' });
       return;
     }

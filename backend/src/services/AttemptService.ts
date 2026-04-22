@@ -3,69 +3,86 @@ import { AttemptRepository } from '../repositories/AttemptRepository';
 import { SubmissionRepository } from '../repositories/SubmissionRepository';
 import { EvaluationService } from './EvaluationService';
 import { AttemptContext, InProgressState, SubmittedState } from '../models/AttemptState';
-
-const examRepo = new ExamRepository();
-const attemptRepo = new AttemptRepository();
-const submissionRepo = new SubmissionRepository();
-const evaluationService = new EvaluationService();
+import { AttemptStatus } from '../../generated/prisma/enums';
 
 export class AttemptService {
+  constructor(
+    private readonly examRepo: ExamRepository = new ExamRepository(),
+    private readonly attemptRepo: AttemptRepository = new AttemptRepository(),
+    private readonly submissionRepo: SubmissionRepository = new SubmissionRepository(),
+    private readonly evaluationService: EvaluationService = new EvaluationService(),
+  ) {}
+
+  private createContextFromStatus(status: AttemptStatus): AttemptContext {
+    const context = new AttemptContext();
+    switch (status) {
+      case 'IN_PROGRESS':
+        context.setState(new InProgressState());
+        return context;
+      case 'SUBMITTED':
+        context.setState(new SubmittedState());
+        return context;
+      default:
+        throw new Error(`Cannot transition attempt from status ${status}`);
+    }
+  }
+
   async startExam(studentId: string, examId: string) {
-    const exam = await examRepo.findById(examId);
+    const exam = await this.examRepo.findById(examId);
     if (!exam) throw new Error('Exam not found');
     if (exam.status !== 'PUBLISHED') throw new Error('Exam is not published');
 
-    const existing = await attemptRepo.findByStudentAndExam(studentId, examId);
+    const existing = await this.attemptRepo.findByStudentAndExam(studentId, examId);
 
     // Resume an in-progress attempt
-    const inProgress = existing.find((a: any) => a.status === 'IN_PROGRESS');
+    const inProgress = existing.find((a) => a.status === 'IN_PROGRESS');
     if (inProgress) return inProgress;
 
     // Block re-attempt if already submitted or evaluated
-    const finished = existing.find((a: any) =>
+    const finished = existing.find((a) =>
       ['SUBMITTED', 'AUTO_SUBMITTED', 'EVALUATED'].includes(a.status)
     );
     if (finished) throw new Error('You have already attempted this exam.');
 
-    const attempt = await attemptRepo.create({ studentId, examId });
+    const attempt = await this.attemptRepo.create({ studentId, examId });
     return attempt;
   }
 
   async saveAnswer(attemptId: string, studentId: string, questionId: string, answer: string) {
-    const attempt = await attemptRepo.findById(attemptId);
+    const attempt = await this.attemptRepo.findById(attemptId);
     if (!attempt) throw new Error('Attempt not found');
     if (attempt.studentId !== studentId) throw new Error('Forbidden');
     if (attempt.status !== 'IN_PROGRESS') throw new Error('Attempt is not in progress');
 
-    return submissionRepo.upsert(attemptId, questionId, answer);
+    return this.submissionRepo.upsert(attemptId, questionId, answer);
   }
 
   async submitExam(attemptId: string, studentId: string) {
-    const attempt = await attemptRepo.findById(attemptId);
+    const attempt = await this.attemptRepo.findById(attemptId);
     if (!attempt) throw new Error('Attempt not found');
     if (attempt.studentId !== studentId) throw new Error('Forbidden');
     if (attempt.status !== 'IN_PROGRESS') throw new Error('Attempt is not in progress');
 
-    const context = new AttemptContext();
-    context.setState(new InProgressState());
+    const context = this.createContextFromStatus(attempt.status);
+    context.proceedToNextState();
+    await this.attemptRepo.updateStatus(attemptId, context.getCurrentStatus());
+
+    const totalScore = await this.evaluationService.evaluateAttempt(attemptId);
+
     context.proceedToNextState();
 
-    const totalScore = await evaluationService.evaluateAttempt(attemptId);
-
-    context.proceedToNextState();
-
-    await attemptRepo.updateStatus(attemptId, 'EVALUATED', { endTime: new Date(), totalScore });
-    return attemptRepo.findById(attemptId);
+    await this.attemptRepo.updateStatus(attemptId, context.getCurrentStatus(), { endTime: new Date(), totalScore });
+    return this.attemptRepo.findById(attemptId);
   }
 
   async getAttemptResult(attemptId: string, studentId: string) {
-    const attempt = await attemptRepo.findById(attemptId);
+    const attempt = await this.attemptRepo.findById(attemptId);
     if (!attempt) throw new Error('Attempt not found');
     if (attempt.studentId !== studentId) throw new Error('Forbidden');
     return attempt;
   }
 
   async getStudentHistory(studentId: string) {
-    return attemptRepo.findByStudent(studentId);
+    return this.attemptRepo.findByStudent(studentId);
   }
 }

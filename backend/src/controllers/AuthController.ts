@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/AuthService';
-
-const authService = new AuthService();
+import { getErrorMessage } from '../utils/http';
 
 export class AuthController {
+  constructor(private readonly authService: AuthService = new AuthService()) {}
+
   async register(req: Request, res: Response) {
     try {
       const { name, email, password, role } = req.body;
@@ -11,10 +12,10 @@ export class AuthController {
         res.status(400).json({ error: 'name, email, password, and role are required' });
         return;
       }
-      const result = await authService.register(name, email, password, role);
+      const result = await this.authService.register(name, email, password, role);
       res.status(201).json(result);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err: unknown) {
+      res.status(400).json({ error: getErrorMessage(err, 'Registration failed') });
     }
   }
 
@@ -25,10 +26,10 @@ export class AuthController {
         res.status(400).json({ error: 'email and password are required' });
         return;
       }
-      const result = await authService.login(email, password);
+      const result = await this.authService.login(email, password);
       res.json(result);
-    } catch (err: any) {
-      res.status(401).json({ error: err.message });
+    } catch (err: unknown) {
+      res.status(401).json({ error: getErrorMessage(err, 'Login failed') });
     }
   }
 }
